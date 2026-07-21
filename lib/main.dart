@@ -2,7 +2,6 @@ import 'package:books4/pages/_pages.dart';
 import 'package:books4/providers/mainprovider.dart';
 import 'package:books4/services/servicio.dart';
 import 'package:books4/routes/routes.dart';
-import 'package:books4/services/update_service.dart';
 import 'package:books4/themes/theme.dart';
 import 'package:books4/utils/utils.dart';
 import 'package:flutter/material.dart';
@@ -25,7 +24,6 @@ class AppState extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => MainProvider(), lazy: true),
         ChangeNotifierProvider(create: (_) => Servicio(), lazy: true),
-        ChangeNotifierProvider(create: (_) => UpdateService(), lazy: true),
       ],
       child: FutureBuilder(
         future: Utils.checkConnection(),

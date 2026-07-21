@@ -57,6 +57,15 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                 children: [
                   ListTile(
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    leading: Icon(Icons.bookmark_border_rounded, color: Utils.colorIcon),
+                    title: Text('Biblioteca', style: Utils.mainTextStyle),
+                    onTap: () {
+                      Navigator.pushNamed(context, BibliotecaPage.routeName);
+                      Scaffold.of(context).closeDrawer();
+                    },
+                  ),
+                  ListTile(
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                     leading: Icon(Utils.iconAutor, color: Utils.colorIcon),
                     title: Text('Autores', style: Utils.mainTextStyle),
                     onTap: () {
@@ -125,15 +134,6 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                     title: Text('Próximos', style: Utils.mainTextStyle),
                     onTap: () {
                       Navigator.pushNamed(context, NextBooksPage.routeName);
-                      Scaffold.of(context).closeDrawer();
-                    },
-                  ),
-                  ListTile(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                    leading: Icon(Icons.bookmark_border_rounded, color: Utils.colorIcon),
-                    title: Text('Biblioteca', style: Utils.mainTextStyle),
-                    onTap: () {
-                      Navigator.pushNamed(context, BibliotecaPage.routeName);
                       Scaffold.of(context).closeDrawer();
                     },
                   ),

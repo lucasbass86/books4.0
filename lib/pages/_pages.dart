@@ -18,4 +18,3 @@ export 'package:books4/pages/main_page.dart';
 export 'package:books4/pages/next_books_page.dart';
 export 'package:books4/pages/no_connection_page.dart';
 export 'package:books4/pages/prestados_page.dart';
-export 'package:books4/pages/update_page.dart';

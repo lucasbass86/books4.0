@@ -60,18 +60,18 @@ class _LibroDataWidgetState extends State<LibroDataWidget> {
                   libro: widget.libro, type: EExpandableType.autor, icon: Utils.iconAutor),
               ExpandableWidget(
                   libro: widget.libro, type: EExpandableType.categoria, icon: Utils.iconCategoria),
-              _observaciones(),
-              _isbnGoogleAmazon(),
-              _paginasYComprado(),
-              ExpandableWidget(
-                  libro: widget.libro, type: EExpandableType.editorial, icon: Utils.iconEditorial),
-              _fechas(),
-              _nota(),
               ExpandableWidget(
                   libro: widget.libro,
                   type: EExpandableType.coleccion,
                   icon: Utils.iconColecciones),
+              ExpandableWidget(
+                  libro: widget.libro, type: EExpandableType.editorial, icon: Utils.iconEditorial),
               TagsBook(libro: widget.libro),
+              _isbnGoogleAmazon(),
+              _paginasYComprado(),
+              _fechas(),
+              _nota(),
+              _observaciones(),
               _portada(),
             ],
           ),
