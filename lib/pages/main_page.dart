@@ -4,9 +4,7 @@ import 'package:books4/pages/_pages.dart';
 import 'package:books4/providers/mainprovider.dart';
 import 'package:books4/services/license_service.dart';
 import 'package:books4/services/servicio.dart';
-import 'package:books4/widgets/widgets.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 class MainPage extends StatefulWidget {
   static const String routeName = 'MainPage';
@@ -47,14 +45,6 @@ class _MainPageState extends State<MainPage> {
     mainProvider = Provider.of<MainProvider>(context);
     final Servicio servicio = Provider.of<Servicio>(context);
     return Scaffold(
-      drawer: GestureDetector(
-        onHorizontalDragUpdate: (details) {
-          if (details.globalPosition.dx < 30) {
-            SystemNavigator.pop();
-          }
-        },
-        child: DrawerWidget(),
-      ),
       body: !servicio.isLoading
           ? ListaPage()
           : Center(child: Image.asset('assets/book.gif', width: 200, height: 200)),

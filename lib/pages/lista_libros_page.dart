@@ -7,6 +7,7 @@ import 'package:books4/utils/enums.dart';
 import 'package:books4/utils/utils.dart';
 import 'package:books4/widgets/widgets.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class ListaPage extends StatefulWidget {
   static const String routeName = 'ListaPage';
@@ -23,6 +24,7 @@ class _ListaPageState extends State<ListaPage> {
   late Servicio servicio;
   late MainProvider mainProvider;
   late ScrollController scrollController = ScrollController();
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   void dispose() {
@@ -35,13 +37,22 @@ class _ListaPageState extends State<ListaPage> {
     servicio = Provider.of<Servicio>(context, listen: false);
     mainProvider = Provider.of<MainProvider>(context);
     return Scaffold(
+      key: _scaffoldKey,
+      drawer: GestureDetector(
+        onHorizontalDragUpdate: (details) {
+          if (details.globalPosition.dx < 30) {
+            SystemNavigator.pop();
+          }
+        },
+        child: DrawerWidget(),
+      ),
       floatingActionButton: Preferences.typeView != ETypeView.portada ? _fab() : null,
       body: CustomScrollView(
         controller: scrollController,
         physics: const BouncingScrollPhysics(),
         keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         slivers: [
-          appBar(),
+          appBar(context),
           sliverLibros(context),
         ],
       ),
@@ -72,15 +83,28 @@ class _ListaPageState extends State<ListaPage> {
     );
   }
 
-  Widget appBar() {
+  Widget appBar(BuildContext context) {
     return SliverAppBar(
       pinned: false,
       expandedHeight: 230,
       backgroundColor: Utils.colorScaffold,
+      iconTheme: IconThemeData(color: Utils.circulo3),
+      automaticallyImplyLeading: false,
       flexibleSpace: FlexibleSpaceBar(
         background: Column(
           children: [
-            TopWigdet(title: 'Libros'),
+            Stack(
+              children: [
+                TopWigdet(title: 'Libros'),
+                Positioned(
+                  left: 20,
+                  top: 20,
+                  child: GestureDetector(
+                      onTap: () => _scaffoldKey.currentState?.openDrawer(),
+                      child: Icon(Icons.menu_rounded, color: Utils.circulo3)),
+                ),
+              ],
+            ),
             _top(),
           ],
         ),
