@@ -3,6 +3,7 @@ import 'package:books4/dialogs/modals.dart';
 import 'package:books4/providers/mainprovider.dart';
 import 'package:books4/services/servicio.dart';
 import 'package:books4/shared_preferences/preferences.dart';
+import 'package:books4/utils/enums.dart';
 import 'package:books4/utils/utils.dart';
 import 'package:books4/widgets/widgets.dart';
 import 'package:flutter/material.dart';
@@ -34,7 +35,7 @@ class _ListaPageState extends State<ListaPage> {
     servicio = Provider.of<Servicio>(context, listen: false);
     mainProvider = Provider.of<MainProvider>(context);
     return Scaffold(
-      floatingActionButton: _fab(),
+      floatingActionButton: Preferences.typeView != ETypeView.portada ? _fab() : null,
       body: CustomScrollView(
         controller: scrollController,
         physics: const BouncingScrollPhysics(),

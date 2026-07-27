@@ -4,6 +4,7 @@ import 'package:books4/utils/utils.dart';
 import 'package:books4/widgets/widgets.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bounceable/flutter_bounceable.dart';
 
 class BookCarouselWidget extends StatelessWidget {
   final List<Libro> libros;
@@ -23,48 +24,33 @@ class BookCarouselWidget extends StatelessWidget {
         itemSnapping: true,
         padding: EdgeInsets.symmetric(horizontal: 16),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        onTap: (value) => showModalBottomSheet(
-          backgroundColor: Colors.transparent,
-          enableDrag: true,
-          isScrollControlled: true,
-          context: context,
-          builder: (context) =>
-              BottomContainerWidget(libro: libros[value], currentRoute: MainPage.routeName),
-        ),
         children: [
           ...libros.map(
-            (libro) => ClipRRect(
-              borderRadius: BorderRadiusGeometry.circular(20),
-              child: InteractiveViewer(
-                clipBehavior: Clip.hardEdge,
-                minScale: 1,
-                maxScale: 5,
-                child:
-                    //  Image.network(
-                    //   fit: BoxFit.fitWidth,
-                    //   Utils.getImgURL(libro.codigo),
-                    //   frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
-                    //     return child;
-                    //   },
-                    //   loadingBuilder: (context, child, loadingProgress) {
-                    //     if (loadingProgress == null) {
-                    //       return child;
-                    //     } else {
-                    //       return Center(
-                    //         child: CircularProgressIndicator(color: Utils.circulo4),
-                    //       );
-                    //     }
-                    //   },
-                    // ),
-                    CachedNetworkImage(
-                  imageUrl: Utils.getImgURL(libro.codigo),
-                  fit: BoxFit.fitWidth,
-                  placeholder: (context, url) => Center(
-                    child: CircularProgressIndicator(
-                      color: Utils.circulo4,
+            (libro) => Bounceable(
+              onTap: () => showModalBottomSheet(
+                backgroundColor: Colors.transparent,
+                enableDrag: true,
+                isScrollControlled: true,
+                context: context,
+                builder: (context) =>
+                    BottomContainerWidget(libro: libro, currentRoute: MainPage.routeName),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadiusGeometry.circular(20),
+                child: InteractiveViewer(
+                  clipBehavior: Clip.hardEdge,
+                  minScale: 1,
+                  maxScale: 5,
+                  child: CachedNetworkImage(
+                    imageUrl: Utils.getImgURL(libro.codigo),
+                    fit: BoxFit.fitWidth,
+                    placeholder: (context, url) => Center(
+                      child: CircularProgressIndicator(
+                        color: Utils.circulo4,
+                      ),
                     ),
+                    errorWidget: (context, url, error) => Utils.noImage,
                   ),
-                  errorWidget: (context, url, error) => Utils.noImage,
                 ),
               ),
             ),

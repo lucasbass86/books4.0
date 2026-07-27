@@ -35,26 +35,7 @@ class _LibroHomeWidgetState extends State<LibroHomeWidget> {
                 children: [
                   Hero(
                     tag: 'libro${widget.libro.codigo}',
-                    child:
-                        // Image.network(
-                        //   fit: BoxFit.fitHeight,
-                        //   Utils.getImgURL(widget.libro.codigo),
-                        //   errorBuilder: (context, error, stackTrace) => Utils.noImage,
-                        //   frameBuilder: (context, child, frame, wasSynchronouslyLoaded) => child,
-                        //   loadingBuilder: (context, child, loadingProgress) {
-                        //     if (loadingProgress == null) {
-                        //       return child;
-                        //     } else {
-                        //       return SizedBox(
-                        //         width: 100,
-                        //         child: Center(
-                        //           child: CircularProgressIndicator(color: Utils.circulo2),
-                        //         ),
-                        //       );
-                        //     }
-                        //   },
-                        // ),
-                        CachedNetworkImage(
+                    child: CachedNetworkImage(
                       imageUrl: Utils.getImgURL(widget.libro.codigo),
                       fit: BoxFit.fitHeight,
                       placeholder: (context, url) => Center(
@@ -115,8 +96,8 @@ class _LibroHomeWidgetState extends State<LibroHomeWidget> {
             child: isPressed
                 ? Container(
                     width: 200,
-                    margin: const EdgeInsets.only(left: 5, top: 10, bottom: 10),
-                    padding: const EdgeInsets.all(13),
+                    margin: const EdgeInsets.only(top: 10, bottom: 10, right: 10),
+                    padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       borderRadius: const BorderRadius.only(
                         topLeft: Radius.circular(Utils.radiusCircular),
@@ -137,7 +118,7 @@ class _LibroHomeWidgetState extends State<LibroHomeWidget> {
                         ),
                         const SizedBox(height: 10),
                         Text(widget.libro.autor, style: Utils.thirdTextStyle),
-                        const SizedBox(height: 20),
+                        Expanded(child: const SizedBox(height: 20)),
                         Align(
                           alignment: Alignment.bottomRight,
                           child: InkWell(

@@ -1,11 +1,11 @@
 import 'package:books4/models/models.dart';
-import 'package:books4/pages/_pages.dart';
 import 'package:books4/services/servicio.dart';
 import 'package:books4/shared_preferences/preferences.dart';
 import 'package:books4/utils/utils.dart';
 import 'package:books4/widgets/widgets.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bounceable/flutter_bounceable.dart';
 
 class LibroSmallWidget extends StatelessWidget {
   final Libro libro;
@@ -37,8 +37,7 @@ class LibroSmallWidget extends StatelessWidget {
         rounded = 7;
         break;
     }
-    return GestureDetector(
-      onLongPress: () => Navigator.pushNamed(context, LibroPage.routeName, arguments: libro),
+    return Bounceable(
       onTap: () {
         showModalBottomSheet(
           backgroundColor: Colors.transparent,
@@ -58,39 +57,7 @@ class LibroSmallWidget extends StatelessWidget {
               borderRadius: BorderRadius.circular(rounded),
               child: Hero(
                 tag: 'libro${libro.codigo}',
-                child:
-                    //  Image.network(
-                    //   fit: BoxFit.cover,
-                    //   Utils.getImgURL(libro.codigo),
-                    //   frameBuilder: (context, child, frame, wasSynchronouslyLoaded) => child,
-                    //   loadingBuilder: (context, child, loadingProgress) => loadingProgress == null
-                    //       ? Stack(
-                    //           children: [
-                    //             child,
-                    //             if (actualCollection != null && isFromCollection)
-                    //               Positioned(
-                    //                 top: 0,
-                    //                 left: 0,
-                    //                 child: Container(
-                    //                   padding: const EdgeInsets.symmetric(horizontal: 5),
-                    //                   decoration: BoxDecoration(
-                    //                     color: Utils.colorDot.withAlpha(230),
-                    //                     borderRadius:
-                    //                         BorderRadius.only(bottomRight: Radius.circular(10)),
-                    //                   ),
-                    //                   child: Text(
-                    //                     actualCollection.orden,
-                    //                     style: TextStyle(fontSize: rounded, color: Utils.circulo2),
-                    //                   ),
-                    //                 ),
-                    //               )
-                    //           ],
-                    //         )
-                    //       : Center(
-                    //           child: CircularProgressIndicator(color: Utils.circulo4),
-                    //         ),
-                    // ),
-                    Stack(
+                child: Stack(
                   children: [
                     CachedNetworkImage(
                       imageUrl: Utils.getImgURL(libro.codigo),

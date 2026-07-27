@@ -1,3 +1,4 @@
+import 'package:books4/helpers/helper.dart';
 import 'package:books4/models/models.dart';
 import 'package:books4/pages/_pages.dart';
 import 'package:books4/services/servicio.dart';
@@ -6,7 +7,9 @@ import 'package:books4/utils/utils.dart';
 import 'package:books4/widgets/widgets.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'dart:ui'; // ← Necesario para BackdropFilter
+import 'dart:ui';
+
+import 'package:flutter_bounceable/flutter_bounceable.dart'; // ← Necesario para BackdropFilter
 
 class BookVertical extends StatelessWidget {
   final Libro libro;
@@ -42,8 +45,7 @@ class BookVertical extends StatelessWidget {
     final Color colorCategoria = Utils.getCategoryColor(libro.categoria);
     Leyendo? leyendo = Preferences.isLeyendo(libro.codigo);
 
-    return GestureDetector(
-      onLongPress: () => Navigator.pushNamed(context, LibroPage.routeName, arguments: libro),
+    return Bounceable(
       onTap: () {
         showModalBottomSheet(
           backgroundColor: Colors.transparent,
@@ -70,51 +72,9 @@ class BookVertical extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           child: Stack(
             children: [
-              // Portada del libro
               Hero(
                 tag: 'libro${libro.codigo}',
-                child:
-                    // Image.network(
-                    //   Utils.getImgURL(libro.codigo),
-                    //   height: 250,
-                    //   width: double.infinity,
-                    //   fit: BoxFit.cover,
-                    //   errorBuilder: (context, error, stackTrace) => Utils.noImage,
-                    //   frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
-                    //     return child;
-                    //   },
-                    //   loadingBuilder: (context, child, loadingProgress) {
-                    //     if (loadingProgress == null) {
-                    //       return Stack(
-                    //         children: [
-                    //           child,
-                    //           if (actualCollection != null && isFromCollection)
-                    //             Positioned(
-                    //               top: 0,
-                    //               left: 0,
-                    //               child: Container(
-                    //                 padding: const EdgeInsets.symmetric(horizontal: 5),
-                    //                 decoration: BoxDecoration(
-                    //                   color: Utils.colorDot.withAlpha(230),
-                    //                   borderRadius: BorderRadius.only(bottomRight: Radius.circular(10)),
-                    //                 ),
-                    //                 child: Text(
-                    //                   actualCollection.orden,
-                    //                   style: TextStyle(fontSize: 20, color: Utils.circulo2),
-                    //                 ),
-                    //               ),
-                    //             )
-                    //         ],
-                    //       );
-                    //     } else {
-                    //       return SizedBox(
-                    //           height: 250,
-                    //           width: double.infinity,
-                    //           child: Center(child: CircularProgressIndicator(color: Utils.circulo4)));
-                    //     }
-                    //   },
-                    // ),
-                    Stack(
+                child: Stack(
                   children: [
                     CachedNetworkImage(
                       imageUrl: Utils.getImgURL(libro.codigo),
@@ -268,10 +228,14 @@ class BookVertical extends StatelessWidget {
                                     ),
                                   ),
                                   if (libro.leido == 'NO' && libro.fechInicio.isNotEmpty)
-                                    CircularProgressWidget(
-                                      currentValue: leyendo?.paginas ?? 0,
-                                      totalValue: libro.paginas,
-                                      progressColor: Utils.getCategoryColor(libro.categoria),
+                                    GestureDetector(
+                                      onTap: () => Helper.restPages(
+                                          context: context, libro: libro, leyendo: leyendo),
+                                      child: CircularProgressWidget(
+                                        currentValue: leyendo?.paginas ?? 0,
+                                        totalValue: libro.paginas,
+                                        progressColor: Utils.getCategoryColor(libro.categoria),
+                                      ),
                                     ),
                                 ],
                               ),

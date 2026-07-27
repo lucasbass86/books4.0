@@ -1,4 +1,5 @@
 import 'package:animate_do/animate_do.dart';
+import 'package:books4/helpers/helper.dart';
 import 'package:books4/models/models.dart';
 import 'package:books4/pages/_pages.dart';
 import 'package:books4/services/servicio.dart';
@@ -194,10 +195,14 @@ class BookWidget extends StatelessWidget {
                     if (libro.leido == 'NO' && libro.fechInicio.isEmpty)
                       BounceInUp(child: Icon(icon)),
                     if (libro.leido == 'NO' && libro.fechInicio.isNotEmpty)
-                      CircularProgressWidget(
-                        currentValue: leyendo?.paginas ?? 0,
-                        totalValue: libro.paginas,
-                        progressColor: Utils.getCategoryColor(libro.categoria),
+                      GestureDetector(
+                        onTap: () =>
+                            Helper.restPages(context: context, libro: libro, leyendo: leyendo),
+                        child: CircularProgressWidget(
+                          currentValue: leyendo?.paginas ?? 0,
+                          totalValue: libro.paginas,
+                          progressColor: Utils.getCategoryColor(libro.categoria),
+                        ),
                       ),
                   ],
                 ),
