@@ -1,4 +1,5 @@
 import 'package:animate_do/animate_do.dart';
+import 'package:books4/utils/debouncer.dart';
 import 'package:books4/utils/utils.dart';
 import 'package:books4/widgets/widgets.dart';
 import 'package:flutter/material.dart';
@@ -102,9 +103,7 @@ class _TopWigdetState extends State<TopWigdet> {
                       ),
                       style: TextStyle(
                           fontSize: 18, color: Utils.circulo2, fontWeight: FontWeight.w500),
-                      onChanged: (value) {
-                        widget.onSearch?.call(value);
-                      },
+                      onChanged: (value) => Debouncer().run(() => widget.onSearch?.call(value)),
                     ),
                   ),
                   CustomInkWell(

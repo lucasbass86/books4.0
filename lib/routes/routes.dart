@@ -24,4 +24,5 @@ Map<String, Widget Function(BuildContext)> routes = <String, WidgetBuilder>{
   EditorialPage.routeName: (_) => const EditorialPage(),
   EditorialesPage.routeName: (_) => const EditorialesPage(),
   PrestadosPage.routeName: (_) => const PrestadosPage(),
+  EstanteriasPage.routeName: (_) => const EstanteriasPage(),
 };

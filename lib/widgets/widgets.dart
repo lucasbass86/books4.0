@@ -1,3 +1,6 @@
+export 'package:books4/widgets/estanterias/bookcase_tab_widget.dart';
+export 'package:books4/widgets/estanterias/bookshelf_widget.dart';
+export 'package:books4/widgets/estanterias/shelf_widget.dart';
 export 'package:books4/widgets/autor/autor_widget.dart';
 export 'package:books4/widgets/autor/home_autor_widget.dart';
 export 'package:books4/widgets/categoria/categoria_widget.dart';

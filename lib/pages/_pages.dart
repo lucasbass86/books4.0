@@ -1,3 +1,4 @@
+export 'package:books4/pages/estanterias_page.dart';
 export 'package:books4/pages/autor_page.dart';
 export 'package:books4/pages/autores_page.dart';
 export 'package:books4/pages/categoria_page.dart';

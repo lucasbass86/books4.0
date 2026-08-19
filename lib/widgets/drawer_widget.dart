@@ -1,5 +1,6 @@
 import 'package:books4/dialogs/dialogs.dart';
 import 'package:books4/pages/_pages.dart';
+import 'package:books4/providers/librarymanager.dart';
 import 'package:books4/shared_preferences/preferences.dart';
 import 'package:books4/utils/enums.dart';
 import 'package:books4/utils/utils.dart';
@@ -7,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:outlined_text/outlined_text.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:provider/provider.dart';
 
 class DrawerWidget extends StatefulWidget {
   const DrawerWidget({super.key});
@@ -116,6 +118,18 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                     onTap: () {
                       Navigator.pushNamed(context, ChartPage.routeName);
                       Scaffold.of(context).closeDrawer();
+                    },
+                  ),
+                  Divider(color: Utils.circulo1),
+                  ListTile(
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    leading: Icon(Icons.local_library_rounded, color: Utils.colorIcon),
+                    title: Text('Estanterías', style: Utils.mainTextStyle),
+                    onTap: () {
+                      Navigator.pushNamed(context, EstanteriasPage.routeName);
+                      Scaffold.of(context).closeDrawer();
+                      LibraryManager manager = Provider.of(context, listen: false);
+                      manager.selectedShelf = null;
                     },
                   ),
                   Divider(color: Utils.circulo1),

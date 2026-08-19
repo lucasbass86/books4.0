@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:books4/models/models.dart';
 import 'package:books4/secret/secret.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 class Utils {
   //COLOR SVG 53bfbc
@@ -105,21 +106,33 @@ class Utils {
     offset: const Offset(0, -5),
   );
 
+  static Color darken(Color color, [double amount = 0.1]) {
+    assert(amount >= 0 && amount <= 1);
+
+    final hsl = HSLColor.fromColor(color);
+    final darkened = hsl.withLightness(
+      (hsl.lightness - amount).clamp(0.0, 1.0),
+    );
+    return darkened.toColor();
+  }
+
   static bool isConnected = false;
   static Future<bool> checkConnection() async {
     try {
-      // final result = await InternetAddress.lookup('https://www.google.com');
-      final result = await InternetAddress.lookup('www.google.es');
+      final result =
+          await InternetAddress.lookup('www.google.es').timeout(const Duration(seconds: 3));
+
       if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
-        isConnected = true;
-        return true;
-      } else {
-        isConnected = false;
-        return false;
+        final response =
+            await http.get(Uri.parse('https://www.google.es')).timeout(const Duration(seconds: 3));
+
+        isConnected = response.statusCode == 200;
+        return isConnected;
       }
-    } on SocketException catch (_) {
-      return false;
-    }
+    } catch (_) {}
+
+    isConnected = false;
+    return false;
   }
 
   static String limpiar(String texto) {
