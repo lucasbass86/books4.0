@@ -1,4 +1,6 @@
 import 'package:books4/models/bookcase.dart';
+import 'package:books4/models/models.dart';
+import 'package:books4/services/servicio.dart';
 import 'package:books4/utils/utils.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -9,6 +11,8 @@ class BookShelfWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Servicio servicio = Provider.of<Servicio>(context, listen: false);
+    final Libro libro = servicio.libros.firstWhere((b) => b.codigo == book.id);
     const double spineW = 40;
     const double spineH = 120;
     Widget image = CachedNetworkImage(
@@ -31,8 +35,18 @@ class BookShelfWidget extends StatelessWidget {
         child: image,
       );
     }
-    return Container(
-      child: image,
+    return Stack(
+      children: [
+        Container(
+          child: image,
+        ),
+        if (libro.leido == 'SI')
+          Container(
+            width: spineW,
+            height: spineH,
+            color: Utils.circulo2.withAlpha(150),
+          )
+      ],
     );
   }
 }

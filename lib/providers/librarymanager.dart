@@ -16,6 +16,13 @@ class LibraryManager extends ChangeNotifier {
     notifyListeners();
   }
 
+  Shelf? _markerShelf;
+  Shelf? get markerShelf => _markerShelf;
+  set markerShelf(Shelf? value) {
+    _markerShelf = value;
+    notifyListeners();
+  }
+
   List<Bookcase> bookcases = [];
   List<int> _searchedBooks = [];
   List<int> get searchedBooks => _searchedBooks;
@@ -118,6 +125,16 @@ class LibraryManager extends ChangeNotifier {
       }
     }
     return null;
+  }
+
+  Shelf? findShelfOfBookByID(int bookId) {
+    try {
+      return bookcases
+          .expand((bc) => bc.shelves)
+          .firstWhere((shelf) => shelf.books.any((b) => b.id == bookId));
+    } catch (_) {
+      return null;
+    }
   }
 
   void moveBookInsideOrBetweenShelves(

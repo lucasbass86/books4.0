@@ -32,6 +32,20 @@ class _EstanteriasPageState extends State<EstanteriasPage> {
         manager.selectedShelf = manager.bookcases[page].shelves.first;
       });
     });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final args = ModalRoute.of(context)?.settings.arguments;
+      if (args != null && args is Shelf) {
+        manager.markerShelf = args;
+        final bookcase = manager.bookcases
+            .where((bc) => bc.shelves.any((s) => s.id == manager.markerShelf!.id))
+            .firstOrNull;
+        if (bookcase != null) {
+          page = bookcase.position;
+          pageController.jumpToPage(page);
+        }
+      }
+    });
   }
 
   @override
@@ -44,6 +58,7 @@ class _EstanteriasPageState extends State<EstanteriasPage> {
   Widget build(BuildContext context) {
     servicio = Provider.of<Servicio>(context);
     manager = Provider.of<LibraryManager>(context);
+
     return Scaffold(
       floatingActionButton: _fab(context),
       body: GestureDetector(
@@ -88,7 +103,7 @@ class _EstanteriasPageState extends State<EstanteriasPage> {
         itemCount: manager.bookcases.length,
         itemBuilder: (context, index) {
           final bookcase = manager.bookcases[index];
-          return BookcaseTabWidget(manager: manager, bookcase: bookcase);
+          return BookcaseTabWidget(servicio: servicio, manager: manager, bookcase: bookcase);
         },
       ),
     );
@@ -110,10 +125,23 @@ class _EstanteriasPageState extends State<EstanteriasPage> {
       crossAxisAlignment: CrossAxisAlignment.end,
       mainAxisSize: MainAxisSize.min,
       children: [
+        FloatingActionButton(
+          mini: true,
+          heroTag: 'addBookcase',
+          backgroundColor: Utils.circulo1,
+          shape: StadiumBorder(),
+          onPressed: () async {
+            final resp = await inputBox(context, 'Indica las baldas',
+                textInputType: TextInputType.number, textAlign: TextAlign.center);
+            if (resp[0]) {
+              manager.addBookcase(int.parse(resp[1]));
+            }
+          },
+          child: Icon(Icons.add),
+        ),
         if (manager.bookcases.isNotEmpty)
           FloatingActionButton(
             heroTag: 'addBook',
-            mini: true,
             backgroundColor: Utils.circulo3,
             shape: StadiumBorder(),
             onPressed: () async {
@@ -141,19 +169,6 @@ class _EstanteriasPageState extends State<EstanteriasPage> {
             },
             child: Icon(Icons.book),
           ),
-        FloatingActionButton(
-          heroTag: 'addBookcase',
-          backgroundColor: Utils.circulo1,
-          shape: StadiumBorder(),
-          onPressed: () async {
-            final resp = await inputBox(context, 'Indica las baldas',
-                textInputType: TextInputType.number, textAlign: TextAlign.center);
-            if (resp[0]) {
-              manager.addBookcase(int.parse(resp[1]));
-            }
-          },
-          child: Icon(Icons.add),
-        ),
       ],
     );
   }
@@ -164,20 +179,28 @@ class _EstanteriasPageState extends State<EstanteriasPage> {
       alignment: Alignment.bottomCenter,
       child: Container(
         margin: const EdgeInsets.all(10),
-        height: 10,
+        height: 20,
         child: ListView.builder(
           scrollDirection: Axis.horizontal,
           shrinkWrap: true,
           itemCount: manager.bookcases.length,
           itemBuilder: (context, index) {
-            return AnimatedContainer(
-              duration: Duration(milliseconds: 800),
-              margin: const EdgeInsets.only(right: 5),
-              width: index == page ? 20 : 10,
-              height: 10,
-              decoration: BoxDecoration(
-                color: Utils.circulo3,
-                borderRadius: BorderRadius.circular(20),
+            return GestureDetector(
+              onTap: () {
+                page = index;
+                pageController.jumpToPage(page);
+                setState(() {});
+              },
+              child: AnimatedContainer(
+                duration: Duration(milliseconds: 800),
+                margin: EdgeInsets.only(
+                    right: 5, top: index == page ? 0 : 5, bottom: index == page ? 0 : 5),
+                width: index == page ? 20 : 10,
+                height: index == page ? 20 : 10,
+                decoration: BoxDecoration(
+                  color: Utils.circulo3,
+                  borderRadius: BorderRadius.circular(20),
+                ),
               ),
             );
           },
@@ -258,12 +281,13 @@ class _EstanteriasPageState extends State<EstanteriasPage> {
                               if (value.isEmpty) {
                                 libros = [];
                               } else {
-                                final query = value.toUpperCase();
+                                final query = value.trim().toUpperCase();
                                 libros = servicio.libros
                                     .where((l) =>
                                         l.autor.toUpperCase().contains(query) ||
                                         l.titulo.toUpperCase().contains(query))
-                                    .toList();
+                                    .toList()
+                                  ..sort((a, b) => a.titulo.compareTo(b.titulo));
                               }
                             });
                           });
@@ -305,66 +329,78 @@ class _EstanteriasPageState extends State<EstanteriasPage> {
                                 itemCount: libros.length,
                                 itemBuilder: (context, index) {
                                   final Libro libro = libros[index];
-                                  return ListTile(
-                                    contentPadding: EdgeInsets.all(0),
-                                    onTap: () {
-                                      if (selection.contains(libro)) {
-                                        selection.remove(libro);
-                                      } else {
-                                        selection.add(libro);
-                                      }
-                                      setState(
-                                        () {},
-                                      );
-                                    },
-                                    leading: ClipRRect(
-                                      borderRadius: BorderRadius.circular(5),
-                                      child: CachedNetworkImage(
-                                        imageUrl: Utils.getImgURL(libro.codigo),
-                                        width: 45,
-                                        fit: BoxFit.fitWidth,
-                                        placeholder: (context, url) => SizedBox(
-                                          width: 45,
-                                          child: Center(
-                                            child: CircularProgressIndicator(color: Utils.circulo4),
-                                          ),
-                                        ),
-                                        errorWidget: (context, url, error) => Utils.noImage,
-                                        imageBuilder: (context, imageProvider) {
-                                          return Image(
-                                            image: imageProvider,
+                                  return Container(
+                                    decoration: BoxDecoration(
+                                        color: selection.contains(libro)
+                                            ? Utils.circulo3.withAlpha(50)
+                                            : Colors.transparent,
+                                        borderRadius: BorderRadius.circular(20)),
+                                    child: ListTile(
+                                      contentPadding: EdgeInsets.all(0),
+                                      onTap: () {
+                                        if (selection.contains(libro)) {
+                                          selection.remove(libro);
+                                        } else {
+                                          selection.add(libro);
+                                        }
+                                        setState(
+                                          () {},
+                                        );
+                                      },
+                                      leading: ClipRRect(
+                                        borderRadius: BorderRadius.circular(5),
+                                        child: GestureDetector(
+                                          onTap: () => showNetworkImage(
+                                              context, Utils.getImgURL(libro.codigo)),
+                                          child: CachedNetworkImage(
+                                            imageUrl: Utils.getImgURL(libro.codigo),
                                             width: 45,
                                             fit: BoxFit.fitWidth,
-                                          );
-                                        },
+                                            placeholder: (context, url) => SizedBox(
+                                              width: 45,
+                                              child: Center(
+                                                child: CircularProgressIndicator(
+                                                    color: Utils.circulo4),
+                                              ),
+                                            ),
+                                            errorWidget: (context, url, error) => Utils.noImage,
+                                            imageBuilder: (context, imageProvider) {
+                                              return Image(
+                                                image: imageProvider,
+                                                width: 45,
+                                                fit: BoxFit.fitWidth,
+                                              );
+                                            },
+                                          ),
+                                        ),
                                       ),
-                                    ),
-                                    title: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          libro.titulo,
-                                          style: TextStyle(
-                                            fontSize: 15,
-                                            color: Colors.white.withAlpha(200),
+                                      title: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            libro.titulo,
+                                            style: TextStyle(
+                                              fontSize: 15,
+                                              color: Colors.white.withAlpha(200),
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                            maxLines: 1,
                                           ),
-                                          overflow: TextOverflow.ellipsis,
-                                          maxLines: 1,
-                                        ),
-                                        Text(
-                                          libro.autor,
-                                          style: TextStyle(
-                                            fontSize: 15,
-                                            color: Colors.white.withAlpha(200),
+                                          Text(
+                                            libro.autor,
+                                            style: TextStyle(
+                                              fontSize: 15,
+                                              color: Colors.white.withAlpha(200),
+                                            ),
                                           ),
-                                        ),
-                                      ],
-                                    ),
-                                    trailing: Icon(
-                                      selection.contains(libro)
-                                          ? Icons.check_box_outlined
-                                          : Icons.check_box_outline_blank_rounded,
-                                      color: Utils.circulo3,
+                                        ],
+                                      ),
+                                      trailing: Icon(
+                                        selection.contains(libro)
+                                            ? Icons.check_box_outlined
+                                            : Icons.check_box_outline_blank_rounded,
+                                        color: Utils.circulo3,
+                                      ),
                                     ),
                                   );
                                 },

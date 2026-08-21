@@ -1,15 +1,18 @@
 import 'package:books4/models/bookcase.dart';
 import 'package:books4/providers/librarymanager.dart';
+import 'package:books4/services/servicio.dart';
 import 'package:books4/utils/utils.dart';
 import 'package:books4/widgets/estanterias/shelf_widget.dart';
 import 'package:flutter/material.dart';
 
 class BookcaseTabWidget extends StatelessWidget {
+  final Servicio servicio;
   final LibraryManager manager;
   final Bookcase bookcase;
 
   const BookcaseTabWidget({
     super.key,
+    required this.servicio,
     required this.manager,
     required this.bookcase,
   });
@@ -40,11 +43,12 @@ class BookcaseTabWidget extends StatelessWidget {
               children: [
                 Container(
                   width: 10,
-                  height: 140,
+                  height: 170,
                   decoration: BoxDecoration(color: Utils.circulo3),
                 ),
                 Expanded(
                   child: ShelfWidget(
+                    servicio: servicio,
                     manager: manager,
                     bookcase: bookcase,
                     shelf: shelf,
@@ -52,7 +56,7 @@ class BookcaseTabWidget extends StatelessWidget {
                 ),
                 Container(
                   width: 10,
-                  height: 140,
+                  height: 170,
                   decoration: BoxDecoration(color: Utils.circulo3),
                 ),
               ],

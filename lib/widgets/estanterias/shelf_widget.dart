@@ -1,19 +1,23 @@
 import 'package:books4/dialogs/dialogs.dart';
 import 'package:books4/models/bookcase.dart';
+import 'package:books4/models/models.dart';
 import 'package:books4/pages/_pages.dart';
 import 'package:books4/providers/librarymanager.dart';
 import 'package:books4/services/servicio.dart';
 import 'package:books4/utils/utils.dart';
 import 'package:books4/widgets/estanterias/bookshelf_widget.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 class ShelfWidget extends StatefulWidget {
+  final Servicio servicio;
   final LibraryManager manager;
   final Bookcase bookcase;
   final Shelf shelf;
 
   const ShelfWidget({
     super.key,
+    required this.servicio,
     required this.manager,
     required this.bookcase,
     required this.shelf,
@@ -39,16 +43,18 @@ class _ShelfWidgetState extends State<ShelfWidget> {
           },
           onLongPress: () => _showMenuShelf(),
           child: Container(
-            height: 140,
+            height: 170,
             padding: const EdgeInsets.all(8),
-            color: widget.manager.searchedBooks.isNotEmpty &&
-                    widget.shelf.books.any((b) => widget.manager.searchedBooks.contains(b.id))
-                ? widget.manager.selectedShelf != widget.shelf
-                    ? Utils.darken(Utils.colorDot, 0.4)
-                    : Utils.colorDot
-                : widget.manager.selectedShelf == widget.shelf
-                    ? Utils.circulo4
-                    : Utils.circulo1,
+            color: widget.manager.markerShelf != null && widget.manager.markerShelf == widget.shelf
+                ? Colors.teal[100]!
+                : widget.manager.searchedBooks.isNotEmpty &&
+                        widget.shelf.books.any((b) => widget.manager.searchedBooks.contains(b.id))
+                    ? widget.manager.selectedShelf != widget.shelf
+                        ? Utils.darken(Utils.colorDot, 0.4)
+                        : Utils.colorDot
+                    : widget.manager.selectedShelf == widget.shelf
+                        ? Utils.circulo4
+                        : Utils.circulo1,
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
               scrollDirection: Axis.horizontal,
@@ -99,7 +105,8 @@ class _ShelfWidgetState extends State<ShelfWidget> {
               child: BookShelfWidget(book: book),
             ),
             child: GestureDetector(
-              onLongPress: () => _showMenu(context, widget.manager, widget.shelf, book),
+              onLongPress: () =>
+                  _showMenu(context, widget.servicio, widget.manager, widget.shelf, book),
               child: BookShelfWidget(book: book),
             ),
           );
@@ -110,21 +117,31 @@ class _ShelfWidgetState extends State<ShelfWidget> {
 
   void _showMenu(
     BuildContext context,
+    Servicio servicio,
     LibraryManager manager,
     Shelf shelf,
     BookShelf book,
   ) {
+    final Libro libro = servicio.libros.firstWhere((b) => b.codigo == book.id);
     showModalBottomSheet(
       context: context,
       builder: (_) => Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-            color: Theme.of(context).scaffoldBackgroundColor,
-            borderRadius:
-                BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20))),
+          color: Theme.of(context).scaffoldBackgroundColor,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(20),
+          ),
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            Text(
+              libro.titulo,
+              style: TextStyle(color: Utils.circulo3),
+            ),
+            Divider(color: Utils.circulo2),
             ListTile(
               title: Text(
                 'Ir a la ficha',
@@ -191,137 +208,234 @@ class _ShelfWidgetState extends State<ShelfWidget> {
               color: Theme.of(context).scaffoldBackgroundColor,
               borderRadius:
                   BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20))),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            spacing: 10,
-            children: [
-              ListTile(
-                title: Text('Agregar balda', style: TextStyle(color: Utils.circulo3)),
-                trailing: Icon(
-                  Icons.book,
-                  color: Utils.circulo3,
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              spacing: 10,
+              children: [
+                ListTile(
+                  title: Text(
+                    'Listar libros',
+                    style: TextStyle(color: Utils.circulo3),
+                  ),
+                  trailing: Icon(
+                    Utils.iconLista,
+                    color: Utils.circulo3,
+                  ),
+                  onTap: () => _showBooks(),
                 ),
-                onTap: () {
-                  widget.manager.addShelfToBookcase(widget.bookcase);
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(Utils.snackBar('Balda añadida'));
-                },
-              ),
-              if (canDown || canUp) Divider(color: Utils.circulo2),
-              Row(
-                children: [
-                  if (canUp)
-                    Expanded(
-                      child: ListTile(
-                        title: Text('Subir', style: TextStyle(color: Utils.circulo3)),
-                        trailing: Icon(
-                          Icons.arrow_drop_up_rounded,
-                          color: Utils.circulo3,
-                        ),
-                        onTap: () {
-                          widget.manager.moveShelfUp(widget.bookcase, widget.shelf);
-                          ScaffoldMessenger.of(context)
-                              .showSnackBar(Utils.snackBar('Balda subida'));
-                          Navigator.pop(context);
-                        },
-                      ),
-                    ),
-                  if (canDown)
-                    Expanded(
-                      child: ListTile(
-                        title: Text('Bajar', style: TextStyle(color: Utils.circulo3)),
-                        trailing: Icon(
-                          Icons.arrow_drop_down_rounded,
-                          color: Utils.circulo3,
-                        ),
-                        onTap: () {
-                          widget.manager.moveShelfDown(widget.bookcase, widget.shelf);
-                          ScaffoldMessenger.of(context)
-                              .showSnackBar(Utils.snackBar('Balda bajada'));
-                          Navigator.pop(context);
-                        },
-                      ),
-                    ),
-                ],
-              ),
-              Divider(color: Utils.circulo2),
-              ListTile(
-                title: Text('Eliminar balda', style: TextStyle(color: Utils.circulo3)),
-                trailing: Icon(
-                  Icons.delete_rounded,
-                  color: Colors.red[200],
-                ),
-                onTap: () async {
-                  final resp = await showMessage(
-                      context: context,
-                      message: 'Se eliminarán los libros de esta balda. ¿Continuar?',
-                      cancel: true);
-                  if (resp && context.mounted) {
-                    widget.manager.deleteShelf(widget.bookcase, widget.shelf);
+                ListTile(
+                  title: Text('Agregar balda', style: TextStyle(color: Utils.circulo3)),
+                  trailing: Icon(
+                    Icons.book,
+                    color: Utils.circulo3,
+                  ),
+                  onTap: () {
+                    widget.manager.addShelfToBookcase(widget.bookcase);
                     Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(Utils.snackBar('Balda borrada'));
-                  }
-                },
-              ),
-              Divider(color: Utils.circulo3, thickness: 2),
-              Row(
-                children: [
-                  if (canLeft)
-                    Expanded(
-                      child: ListTile(
-                        title: Text('Izquierda', style: TextStyle(color: Utils.circulo3)),
-                        trailing: Icon(
-                          Icons.arrow_left_rounded,
-                          color: Utils.circulo3,
-                        ),
-                        onTap: () {
-                          widget.manager.moveBookcaseLeft(widget.bookcase);
-                          Navigator.pop(context);
-                          ScaffoldMessenger.of(context)
-                              .showSnackBar(Utils.snackBar('Estantería movida a la izquierda'));
-                        },
-                      ),
-                    ),
-                  if (canRight)
-                    Expanded(
-                      child: ListTile(
-                        title: Text('Derecha', style: TextStyle(color: Utils.circulo3)),
-                        trailing: Icon(
-                          Icons.arrow_right_rounded,
-                          color: Utils.circulo3,
-                        ),
-                        onTap: () {
-                          widget.manager.moveBookcaseRight(widget.bookcase);
-                          Navigator.pop(context);
-                          ScaffoldMessenger.of(context)
-                              .showSnackBar(Utils.snackBar('Estantería movida a la derecha'));
-                        },
-                      ),
-                    ),
-                ],
-              ),
-              if (canLeft || canRight) Divider(color: Utils.circulo2),
-              ListTile(
-                title: Text('Eliminar estantería', style: TextStyle(color: Utils.circulo3)),
-                trailing: Icon(
-                  Icons.delete_forever_rounded,
-                  color: Colors.red[200],
+                    ScaffoldMessenger.of(context).showSnackBar(Utils.snackBar('Balda añadida'));
+                  },
                 ),
-                onTap: () async {
-                  final resp = await showMessage(
-                      context: context, message: '¿Eliminar todos los libros?', cancel: true);
-                  if (resp && context.mounted) {
-                    widget.manager.deleteBookcase(widget.bookcase);
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context)
-                        .showSnackBar(Utils.snackBar('Estantería eliminada'));
-                  }
-                },
-              ),
-            ],
+                if (canDown || canUp) Divider(color: Utils.circulo2),
+                Row(
+                  children: [
+                    if (canUp)
+                      Expanded(
+                        child: ListTile(
+                          title: Text('Subir', style: TextStyle(color: Utils.circulo3)),
+                          trailing: Icon(
+                            Icons.arrow_drop_up_rounded,
+                            color: Utils.circulo3,
+                          ),
+                          onTap: () {
+                            widget.manager.moveShelfUp(widget.bookcase, widget.shelf);
+                            ScaffoldMessenger.of(context)
+                                .showSnackBar(Utils.snackBar('Balda subida'));
+                            Navigator.pop(context);
+                          },
+                        ),
+                      ),
+                    if (canDown)
+                      Expanded(
+                        child: ListTile(
+                          title: Text('Bajar', style: TextStyle(color: Utils.circulo3)),
+                          trailing: Icon(
+                            Icons.arrow_drop_down_rounded,
+                            color: Utils.circulo3,
+                          ),
+                          onTap: () {
+                            widget.manager.moveShelfDown(widget.bookcase, widget.shelf);
+                            ScaffoldMessenger.of(context)
+                                .showSnackBar(Utils.snackBar('Balda bajada'));
+                            Navigator.pop(context);
+                          },
+                        ),
+                      ),
+                  ],
+                ),
+                Divider(color: Utils.circulo2),
+                ListTile(
+                  title: Text('Eliminar balda', style: TextStyle(color: Utils.circulo3)),
+                  trailing: Icon(
+                    Icons.delete_rounded,
+                    color: Colors.red[200],
+                  ),
+                  onTap: () async {
+                    final resp = await showMessage(
+                        context: context,
+                        message: 'Se eliminarán los libros de esta balda. ¿Continuar?',
+                        cancel: true);
+                    if (resp && context.mounted) {
+                      widget.manager.deleteShelf(widget.bookcase, widget.shelf);
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(Utils.snackBar('Balda borrada'));
+                    }
+                  },
+                ),
+                Divider(color: Utils.circulo3, thickness: 2),
+                Row(
+                  children: [
+                    if (canLeft)
+                      Expanded(
+                        child: ListTile(
+                          title: Text('Izquierda', style: TextStyle(color: Utils.circulo3)),
+                          trailing: Icon(
+                            Icons.arrow_left_rounded,
+                            color: Utils.circulo3,
+                          ),
+                          onTap: () {
+                            widget.manager.moveBookcaseLeft(widget.bookcase);
+                            Navigator.pop(context);
+                            ScaffoldMessenger.of(context)
+                                .showSnackBar(Utils.snackBar('Estantería movida a la izquierda'));
+                          },
+                        ),
+                      ),
+                    if (canRight)
+                      Expanded(
+                        child: ListTile(
+                          title: Text('Derecha', style: TextStyle(color: Utils.circulo3)),
+                          trailing: Icon(
+                            Icons.arrow_right_rounded,
+                            color: Utils.circulo3,
+                          ),
+                          onTap: () {
+                            widget.manager.moveBookcaseRight(widget.bookcase);
+                            Navigator.pop(context);
+                            ScaffoldMessenger.of(context)
+                                .showSnackBar(Utils.snackBar('Estantería movida a la derecha'));
+                          },
+                        ),
+                      ),
+                  ],
+                ),
+                if (canLeft || canRight) Divider(color: Utils.circulo2),
+                ListTile(
+                  title: Text('Eliminar estantería', style: TextStyle(color: Utils.circulo3)),
+                  trailing: Icon(
+                    Icons.delete_forever_rounded,
+                    color: Colors.red[200],
+                  ),
+                  onTap: () async {
+                    final resp = await showMessage(
+                        context: context, message: '¿Eliminar todos los libros?', cancel: true);
+                    if (resp && context.mounted) {
+                      widget.manager.deleteBookcase(widget.bookcase);
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context)
+                          .showSnackBar(Utils.snackBar('Estantería eliminada'));
+                    }
+                  },
+                ),
+              ],
+            ),
           ),
         );
       },
     );
+  }
+
+  void _showBooks() {
+    Widget content = Scaffold(
+      body: Container(
+        margin: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(20),
+        decoration:
+            BoxDecoration(color: Utils.colorContainer, borderRadius: BorderRadius.circular(20)),
+        child: Column(
+          spacing: 20,
+          children: [
+            Expanded(
+              child: ListView.separated(
+                physics: const BouncingScrollPhysics(),
+                shrinkWrap: true,
+                itemCount: widget.shelf.books.length,
+                itemBuilder: (context, index) {
+                  final Libro libro = widget.servicio.libros
+                      .firstWhere((l) => l.codigo == widget.shelf.books[index].id);
+                  return GestureDetector(
+                    onTap: () =>
+                        Navigator.pushNamed(context, LibroPage.routeName, arguments: libro),
+                    child: Row(
+                      spacing: 10,
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: CachedNetworkImage(
+                            imageUrl: Utils.getImgURL(libro.codigo),
+                            fit: BoxFit.contain,
+                            placeholder: (context, url) => SizedBox(
+                              width: 45,
+                              child: Center(
+                                child: CircularProgressIndicator(color: Utils.circulo4),
+                              ),
+                            ),
+                            errorWidget: (context, url, error) => Utils.noImage,
+                            imageBuilder: (context, imageProvider) {
+                              return Image(
+                                image: imageProvider,
+                                width: 45,
+                                fit: BoxFit.fitWidth,
+                              );
+                            },
+                          ),
+                        ),
+                        Expanded(
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      libro.titulo,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    Text(libro.autor, overflow: TextOverflow.ellipsis),
+                                  ],
+                                ),
+                              ),
+                              Icon(Icons.arrow_right_rounded),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+                separatorBuilder: (BuildContext context, int index) => Divider(),
+              ),
+            ),
+            Align(
+              alignment: Alignment.bottomRight,
+              child:
+                  ElevatedButton(onPressed: () => Navigator.pop(context), child: Text('Aceptar')),
+            )
+          ],
+        ),
+      ),
+    );
+    simpleDialog(context, content);
   }
 }

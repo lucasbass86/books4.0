@@ -7,6 +7,7 @@ import 'package:books4/services/servicio.dart';
 import 'package:books4/shared_preferences/preferences.dart';
 import 'package:books4/utils/enums.dart';
 import 'package:books4/utils/utils.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:scratcher/scratcher.dart';
 
@@ -602,4 +603,77 @@ Future<dynamic> shuffleBook(
     );
   }
   return showMessage(context: context, message: 'No se han encontrado libros sin leer.');
+}
+
+Future<void> simpleDialog(BuildContext context, Widget content) {
+  return showGeneralDialog(
+    context: context,
+    barrierDismissible: true,
+    barrierLabel: '',
+    transitionDuration: Duration(milliseconds: 200),
+    pageBuilder: (_, __, ___) {
+      return Center(
+        child: content,
+      );
+    },
+    transitionBuilder: (_, anim, __, child) {
+      return Transform.scale(scale: anim.value, child: child);
+    },
+  );
+}
+
+Future<void> showAssetImage(BuildContext context, String assetName) {
+  return showGeneralDialog(
+    context: context,
+    barrierDismissible: true,
+    barrierLabel: '',
+    transitionDuration: Duration(milliseconds: 200),
+    pageBuilder: (_, __, ___) {
+      return Center(
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Image.asset(assetName, fit: BoxFit.contain),
+        ),
+      );
+    },
+    transitionBuilder: (_, anim, __, child) {
+      return Transform.scale(scale: anim.value, child: child);
+    },
+  );
+}
+
+Future<void> showNetworkImage(BuildContext context, String url) {
+  return showGeneralDialog(
+    context: context,
+    barrierDismissible: true,
+    barrierLabel: '',
+    transitionDuration: Duration(milliseconds: 200),
+    pageBuilder: (_, __, ___) {
+      return Center(
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: CachedNetworkImage(
+            imageUrl: url,
+            fit: BoxFit.contain,
+            placeholder: (context, url) => SizedBox(
+              width: 45,
+              child: Center(
+                child: CircularProgressIndicator(color: Utils.circulo4),
+              ),
+            ),
+            errorWidget: (context, url, error) => Utils.noImage,
+            imageBuilder: (context, imageProvider) {
+              return Image(
+                image: imageProvider,
+                fit: BoxFit.fitWidth,
+              );
+            },
+          ),
+        ),
+      );
+    },
+    transitionBuilder: (_, anim, __, child) {
+      return Transform.scale(scale: anim.value, child: child);
+    },
+  );
 }

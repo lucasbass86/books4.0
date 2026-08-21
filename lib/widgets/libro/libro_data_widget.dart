@@ -1,8 +1,10 @@
 import 'package:animate_do/animate_do.dart';
 import 'package:books4/dialogs/dialogs.dart';
 import 'package:books4/helpers/helper.dart';
+import 'package:books4/models/bookcase.dart';
 import 'package:books4/models/models.dart';
 import 'package:books4/pages/_pages.dart';
+import 'package:books4/providers/librarymanager.dart';
 import 'package:books4/services/servicio.dart';
 import 'package:books4/shared_preferences/preferences.dart';
 import 'package:books4/utils/enums.dart';
@@ -108,6 +110,8 @@ class _LibroDataWidgetState extends State<LibroDataWidget> {
   }
 
   Widget _idIconos(BuildContext context) {
+    LibraryManager manager = Provider.of<LibraryManager>(context, listen: false);
+    Shelf? shelf = manager.findShelfOfBookByID(widget.libro.codigo);
     late IconData icon;
     if (servicio.siguientes.any((l) => l.codigo == widget.libro.codigo)) {
       icon = Icons.bookmarks_rounded;
@@ -129,6 +133,14 @@ class _LibroDataWidgetState extends State<LibroDataWidget> {
             ],
           ),
         ),
+        //ESTANTERIA
+        if (shelf != null)
+          CustomInkWell(
+              onTap: () {
+                Navigator.pushNamed(context, EstanteriasPage.routeName, arguments: shelf);
+                manager.markerShelf = null;
+              },
+              child: BounceInDown(child: Icon(Icons.location_on))),
         //LIBRO LEYENDO
         // if (widget.libro.leido == 'NO' && widget.libro.fechInicio.isNotEmpty)
         //   CustomInkWell(
