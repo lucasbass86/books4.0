@@ -1,6 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:books4/pages/_pages.dart';
+import 'package:books4/providers/librarymanager.dart';
 import 'package:books4/providers/mainprovider.dart';
 import 'package:books4/services/license_service.dart';
 import 'package:books4/services/servicio.dart';
@@ -44,6 +45,8 @@ class _MainPageState extends State<MainPage> {
   Widget build(BuildContext context) {
     mainProvider = Provider.of<MainProvider>(context);
     final Servicio servicio = Provider.of<Servicio>(context);
+    LibraryManager manager = Provider.of<LibraryManager>(context, listen: false);
+    manager.loadBookcase();
     return Scaffold(
       body: !servicio.isLoading
           ? ListaPage()

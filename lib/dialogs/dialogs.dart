@@ -677,3 +677,86 @@ Future<void> showNetworkImage(BuildContext context, String url) {
     },
   );
 }
+
+void showBooks(BuildContext context, List<Libro> libros) {
+  Widget content = Scaffold(
+    body: Container(
+      margin: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(20),
+      decoration:
+          BoxDecoration(color: Utils.colorContainer, borderRadius: BorderRadius.circular(20)),
+      child: Column(
+        spacing: 20,
+        children: [
+          Expanded(
+            child: ListView.separated(
+              physics: const BouncingScrollPhysics(),
+              shrinkWrap: true,
+              itemCount: libros.length,
+              itemBuilder: (context, index) {
+                final Libro libro = libros[index];
+                return GestureDetector(
+                  onTap: () => Navigator.pushNamed(context, LibroPage.routeName, arguments: libro),
+                  child: Row(
+                    spacing: 10,
+                    children: [
+                      Hero(
+                        tag: 'libro${libro.codigo}',
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: CachedNetworkImage(
+                            imageUrl: Utils.getImgURL(libro.codigo),
+                            fit: BoxFit.contain,
+                            placeholder: (context, url) => SizedBox(
+                              width: 45,
+                              child: Center(
+                                child: CircularProgressIndicator(color: Utils.circulo4),
+                              ),
+                            ),
+                            errorWidget: (context, url, error) => Utils.noImage,
+                            imageBuilder: (context, imageProvider) {
+                              return Image(
+                                image: imageProvider,
+                                width: 45,
+                                fit: BoxFit.fitWidth,
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    libro.titulo,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  Text(libro.autor, overflow: TextOverflow.ellipsis),
+                                ],
+                              ),
+                            ),
+                            Icon(Icons.arrow_right_rounded),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+              separatorBuilder: (BuildContext context, int index) => Divider(),
+            ),
+          ),
+          Align(
+            alignment: Alignment.bottomRight,
+            child: ElevatedButton(onPressed: () => Navigator.pop(context), child: Text('Aceptar')),
+          )
+        ],
+      ),
+    ),
+  );
+  simpleDialog(context, content);
+}

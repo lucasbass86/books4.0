@@ -213,7 +213,13 @@ class _EstanteriasPageState extends State<EstanteriasPage> {
     final searchController = TextEditingController();
     List<Libro> libros = [];
     List<Libro> selection = [];
-
+    final List<int> located = manager.bookcases
+        .expand((bc) => bc.shelves)
+        .expand((shelf) => shelf.books)
+        .map((book) => book.id)
+        .toList();
+    final List<Libro> notLocated =
+        servicio.libros.where((l) => !located.contains(l.codigo)).toList();
     return showModalBottomSheet<List<Libro>?>(
       context: context,
       isScrollControlled: true,
@@ -249,10 +255,25 @@ class _EstanteriasPageState extends State<EstanteriasPage> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            'Agregar libro',
-                            style: TextStyle(
-                                color: Utils.circulo1, fontSize: 18, fontWeight: FontWeight.w600),
+                          Row(
+                            spacing: 10,
+                            children: [
+                              GestureDetector(
+                                onTap: () {
+                                  if (notLocated.isNotEmpty) {
+                                    showBooks(context, notLocated);
+                                  }
+                                },
+                                child: Icon(Icons.location_off),
+                              ),
+                              Text(
+                                'Agregar libro',
+                                style: TextStyle(
+                                    color: Utils.circulo1,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w600),
+                              ),
+                            ],
                           ),
                           GestureDetector(
                             onTap: () => Navigator.pop(context, selection),
@@ -284,8 +305,9 @@ class _EstanteriasPageState extends State<EstanteriasPage> {
                                 final query = value.trim().toUpperCase();
                                 libros = servicio.libros
                                     .where((l) =>
-                                        l.autor.toUpperCase().contains(query) ||
-                                        l.titulo.toUpperCase().contains(query))
+                                        (l.autor.toUpperCase().contains(query) ||
+                                            l.titulo.toUpperCase().contains(query)) &&
+                                        !located.contains(l.codigo))
                                     .toList()
                                   ..sort((a, b) => a.titulo.compareTo(b.titulo));
                               }
@@ -321,7 +343,14 @@ class _EstanteriasPageState extends State<EstanteriasPage> {
                       const SizedBox(height: 12),
                       Expanded(
                         child: libros.isEmpty
-                            ? const Center(child: Text('Buscar...'))
+                            ? Column(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text('Buscar...'),
+                                  Text('(no aparecerán los libros ya ubicados)'),
+                                ],
+                              )
                             : ListView.builder(
                                 controller: scrollController,
                                 physics: const BouncingScrollPhysics(),

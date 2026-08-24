@@ -223,7 +223,12 @@ class _ShelfWidgetState extends State<ShelfWidget> {
                     Utils.iconLista,
                     color: Utils.circulo3,
                   ),
-                  onTap: () => _showBooks(),
+                  onTap: () {
+                    List<Libro> libros = widget.shelf.books
+                        .map((e) => widget.servicio.libros.firstWhere((l) => l.codigo == e.id))
+                        .toList();
+                    showBooks(context, libros);
+                  },
                 ),
                 ListTile(
                   title: Text('Agregar balda', style: TextStyle(color: Utils.circulo3)),
