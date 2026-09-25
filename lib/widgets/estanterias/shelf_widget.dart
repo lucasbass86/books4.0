@@ -6,7 +6,6 @@ import 'package:books4/providers/librarymanager.dart';
 import 'package:books4/services/servicio.dart';
 import 'package:books4/utils/utils.dart';
 import 'package:books4/widgets/estanterias/bookshelf_widget.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 class ShelfWidget extends StatefulWidget {
@@ -14,6 +13,7 @@ class ShelfWidget extends StatefulWidget {
   final LibraryManager manager;
   final Bookcase bookcase;
   final Shelf shelf;
+  final bool locked;
 
   const ShelfWidget({
     super.key,
@@ -21,6 +21,7 @@ class ShelfWidget extends StatefulWidget {
     required this.manager,
     required this.bookcase,
     required this.shelf,
+    required this.locked,
   });
 
   @override
@@ -83,32 +84,98 @@ class _ShelfWidgetState extends State<ShelfWidget> {
     );
   }
 
+  // List<Widget> _buildBookTargets(BuildContext context) {
+  //   return List.generate(widget.shelf.books.length, (index) {
+  //     final book = widget.shelf.books[index];
+  //     return DragTarget<BookShelf>(
+  //       onWillAcceptWithDetails: (_) => true,
+  //       onAcceptWithDetails: (draggedBook) {
+  //         if (!widget.locked) {
+  //           widget.manager.moveBookInsideOrBetweenShelves(
+  //             draggedBook.data,
+  //             widget.shelf,
+  //             index,
+  //           );
+  //         }
+  //       },
+  //       builder: (_, __, ___) {
+  //         return Draggable<BookShelf>(
+  //           data: book,
+  //           feedback: BookShelfWidget(book: book),
+  //           childWhenDragging: SizedBox.shrink(),
+  //           child: GestureDetector(
+  //             onLongPress: () =>
+  //                 _showMenu(context, widget.servicio, widget.manager, widget.shelf, book),
+  //             child: BookShelfWidget(book: book),
+  //           ),
+  //         );
+  //       },
+  //     );
+  //   });
+  // }
+  int? _hoverIndex;
+
   List<Widget> _buildBookTargets(BuildContext context) {
     return List.generate(widget.shelf.books.length, (index) {
       final book = widget.shelf.books[index];
-
       return DragTarget<BookShelf>(
-        onWillAcceptWithDetails: (_) => true,
-        onAcceptWithDetails: (draggedBook) {
-          widget.manager.moveBookInsideOrBetweenShelves(
-            draggedBook.data,
-            widget.shelf,
-            index,
-          );
+        onWillAcceptWithDetails: (_) => !widget.locked,
+        onMove: (_) {
+          if (_hoverIndex != index) {
+            setState(() => _hoverIndex = index);
+          }
         },
-        builder: (_, __, ___) {
-          return Draggable<BookShelf>(
-            data: book,
-            feedback: BookShelfWidget(book: book),
-            childWhenDragging: Opacity(
-              opacity: 0.3,
-              child: BookShelfWidget(book: book),
+        onLeave: (_) {
+          if (_hoverIndex == index) {
+            setState(() => _hoverIndex = null);
+          }
+        },
+        onAcceptWithDetails: (details) {
+          setState(() => _hoverIndex = null);
+          if (!widget.locked) {
+            widget.manager.moveBookInsideOrBetweenShelves(
+              details.data,
+              widget.shelf,
+              index,
+            );
+          }
+        },
+        builder: (context, candidateData, rejectedData) {
+          final isHovering = candidateData.isNotEmpty || _hoverIndex == index;
+          final gap = AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            width: isHovering ? 40 : 0,
+            height: isHovering ? 120 : 0,
+            margin: EdgeInsets.symmetric(horizontal: isHovering ? 4 : 0),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              border: isHovering
+                  ? Border.all(
+                      color: Utils.circulo2, width: 2, strokeAlign: BorderSide.strokeAlignInside)
+                  : null,
+              color: isHovering ? Utils.circulo2 : null,
             ),
-            child: GestureDetector(
-              onLongPress: () =>
-                  _showMenu(context, widget.servicio, widget.manager, widget.shelf, book),
-              child: BookShelfWidget(book: book),
-            ),
+          );
+          return Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              gap,
+              Draggable<BookShelf>(
+                data: book,
+                feedback: BookShelfWidget(book: book),
+                childWhenDragging: SizedBox.shrink(),
+                child: GestureDetector(
+                  onLongPress: () => _showMenu(
+                    context,
+                    widget.servicio,
+                    widget.manager,
+                    widget.shelf,
+                    book,
+                  ),
+                  child: BookShelfWidget(book: book),
+                ),
+              ),
+            ],
           );
         },
       );
@@ -158,35 +225,40 @@ class _ShelfWidgetState extends State<ShelfWidget> {
                 if (context.mounted) Navigator.pop(context);
               },
             ),
-            ListTile(
-              trailing: Icon(
-                  book.horizontal
-                      ? Icons.rotate_90_degrees_cw_rounded
-                      : Icons.rotate_90_degrees_ccw_rounded,
-                  color: Utils.circulo3),
-              title: Text(
-                'Girar',
-                style: TextStyle(color: Utils.circulo3),
+            if (!widget.locked)
+              Column(
+                children: [
+                  ListTile(
+                    trailing: Icon(
+                        book.horizontal
+                            ? Icons.rotate_90_degrees_cw_rounded
+                            : Icons.rotate_90_degrees_ccw_rounded,
+                        color: Utils.circulo3),
+                    title: Text(
+                      'Girar',
+                      style: TextStyle(color: Utils.circulo3),
+                    ),
+                    onTap: () {
+                      manager.rotateBook(book);
+                      Navigator.pop(context);
+                    },
+                  ),
+                  ListTile(
+                    trailing: Icon(
+                      Icons.delete,
+                      color: Colors.red[200],
+                    ),
+                    title: Text(
+                      'Eliminar',
+                      style: TextStyle(color: Utils.circulo3),
+                    ),
+                    onTap: () {
+                      manager.deleteBook(shelf, book);
+                      Navigator.pop(context);
+                    },
+                  ),
+                ],
               ),
-              onTap: () {
-                manager.rotateBook(book);
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              trailing: Icon(
-                Icons.delete,
-                color: Colors.red[200],
-              ),
-              title: Text(
-                'Eliminar',
-                style: TextStyle(color: Utils.circulo3),
-              ),
-              onTap: () {
-                manager.deleteBook(shelf, book);
-                Navigator.pop(context);
-              },
-            ),
           ],
         ),
       ),
@@ -230,217 +302,143 @@ class _ShelfWidgetState extends State<ShelfWidget> {
                     showBooks(context, libros);
                   },
                 ),
-                ListTile(
-                  title: Text('Agregar balda', style: TextStyle(color: Utils.circulo3)),
-                  trailing: Icon(
-                    Icons.book,
-                    color: Utils.circulo3,
+                if (!widget.locked)
+                  Column(
+                    children: [
+                      ListTile(
+                        title: Text('Agregar balda', style: TextStyle(color: Utils.circulo3)),
+                        trailing: Icon(
+                          Icons.book,
+                          color: Utils.circulo3,
+                        ),
+                        onTap: () {
+                          widget.manager.addShelfToBookcase(widget.bookcase);
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context)
+                              .showSnackBar(Utils.snackBar('Balda añadida'));
+                        },
+                      ),
+                      if (canDown || canUp) Divider(color: Utils.circulo2),
+                      Row(
+                        children: [
+                          if (canUp)
+                            Expanded(
+                              child: ListTile(
+                                title: Text('Subir', style: TextStyle(color: Utils.circulo3)),
+                                trailing: Icon(
+                                  Icons.arrow_drop_up_rounded,
+                                  color: Utils.circulo3,
+                                ),
+                                onTap: () {
+                                  widget.manager.moveShelfUp(widget.bookcase, widget.shelf);
+                                  ScaffoldMessenger.of(context)
+                                      .showSnackBar(Utils.snackBar('Balda subida'));
+                                  Navigator.pop(context);
+                                },
+                              ),
+                            ),
+                          if (canDown)
+                            Expanded(
+                              child: ListTile(
+                                title: Text('Bajar', style: TextStyle(color: Utils.circulo3)),
+                                trailing: Icon(
+                                  Icons.arrow_drop_down_rounded,
+                                  color: Utils.circulo3,
+                                ),
+                                onTap: () {
+                                  widget.manager.moveShelfDown(widget.bookcase, widget.shelf);
+                                  ScaffoldMessenger.of(context)
+                                      .showSnackBar(Utils.snackBar('Balda bajada'));
+                                  Navigator.pop(context);
+                                },
+                              ),
+                            ),
+                        ],
+                      ),
+                      Divider(color: Utils.circulo2),
+                      ListTile(
+                        title: Text('Eliminar balda', style: TextStyle(color: Utils.circulo3)),
+                        trailing: Icon(
+                          Icons.delete_rounded,
+                          color: Colors.red[200],
+                        ),
+                        onTap: () async {
+                          final resp = await showMessage(
+                              context: context,
+                              message: 'Se eliminarán los libros de esta balda. ¿Continuar?',
+                              cancel: true);
+                          if (resp && context.mounted) {
+                            widget.manager.deleteShelf(widget.bookcase, widget.shelf);
+                            Navigator.pop(context);
+                            ScaffoldMessenger.of(context)
+                                .showSnackBar(Utils.snackBar('Balda borrada'));
+                          }
+                        },
+                      ),
+                      Divider(color: Utils.circulo3, thickness: 2),
+                      Row(
+                        children: [
+                          if (canLeft)
+                            Expanded(
+                              child: ListTile(
+                                title: Text('Izquierda', style: TextStyle(color: Utils.circulo3)),
+                                trailing: Icon(
+                                  Icons.arrow_left_rounded,
+                                  color: Utils.circulo3,
+                                ),
+                                onTap: () {
+                                  widget.manager.moveBookcaseLeft(widget.bookcase);
+                                  Navigator.pop(context);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                      Utils.snackBar('Estantería movida a la izquierda'));
+                                },
+                              ),
+                            ),
+                          if (canRight)
+                            Expanded(
+                              child: ListTile(
+                                title: Text('Derecha', style: TextStyle(color: Utils.circulo3)),
+                                trailing: Icon(
+                                  Icons.arrow_right_rounded,
+                                  color: Utils.circulo3,
+                                ),
+                                onTap: () {
+                                  widget.manager.moveBookcaseRight(widget.bookcase);
+                                  Navigator.pop(context);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                      Utils.snackBar('Estantería movida a la derecha'));
+                                },
+                              ),
+                            ),
+                        ],
+                      ),
+                      if (canLeft || canRight) Divider(color: Utils.circulo2),
+                      ListTile(
+                        title: Text('Eliminar estantería', style: TextStyle(color: Utils.circulo3)),
+                        trailing: Icon(
+                          Icons.delete_forever_rounded,
+                          color: Colors.red[200],
+                        ),
+                        onTap: () async {
+                          final resp = await showMessage(
+                              context: context,
+                              message: '¿Eliminar todos los libros?',
+                              cancel: true);
+                          if (resp && context.mounted) {
+                            widget.manager.deleteBookcase(widget.bookcase);
+                            Navigator.pop(context);
+                            ScaffoldMessenger.of(context)
+                                .showSnackBar(Utils.snackBar('Estantería eliminada'));
+                          }
+                        },
+                      ),
+                    ],
                   ),
-                  onTap: () {
-                    widget.manager.addShelfToBookcase(widget.bookcase);
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(Utils.snackBar('Balda añadida'));
-                  },
-                ),
-                if (canDown || canUp) Divider(color: Utils.circulo2),
-                Row(
-                  children: [
-                    if (canUp)
-                      Expanded(
-                        child: ListTile(
-                          title: Text('Subir', style: TextStyle(color: Utils.circulo3)),
-                          trailing: Icon(
-                            Icons.arrow_drop_up_rounded,
-                            color: Utils.circulo3,
-                          ),
-                          onTap: () {
-                            widget.manager.moveShelfUp(widget.bookcase, widget.shelf);
-                            ScaffoldMessenger.of(context)
-                                .showSnackBar(Utils.snackBar('Balda subida'));
-                            Navigator.pop(context);
-                          },
-                        ),
-                      ),
-                    if (canDown)
-                      Expanded(
-                        child: ListTile(
-                          title: Text('Bajar', style: TextStyle(color: Utils.circulo3)),
-                          trailing: Icon(
-                            Icons.arrow_drop_down_rounded,
-                            color: Utils.circulo3,
-                          ),
-                          onTap: () {
-                            widget.manager.moveShelfDown(widget.bookcase, widget.shelf);
-                            ScaffoldMessenger.of(context)
-                                .showSnackBar(Utils.snackBar('Balda bajada'));
-                            Navigator.pop(context);
-                          },
-                        ),
-                      ),
-                  ],
-                ),
-                Divider(color: Utils.circulo2),
-                ListTile(
-                  title: Text('Eliminar balda', style: TextStyle(color: Utils.circulo3)),
-                  trailing: Icon(
-                    Icons.delete_rounded,
-                    color: Colors.red[200],
-                  ),
-                  onTap: () async {
-                    final resp = await showMessage(
-                        context: context,
-                        message: 'Se eliminarán los libros de esta balda. ¿Continuar?',
-                        cancel: true);
-                    if (resp && context.mounted) {
-                      widget.manager.deleteShelf(widget.bookcase, widget.shelf);
-                      Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(Utils.snackBar('Balda borrada'));
-                    }
-                  },
-                ),
-                Divider(color: Utils.circulo3, thickness: 2),
-                Row(
-                  children: [
-                    if (canLeft)
-                      Expanded(
-                        child: ListTile(
-                          title: Text('Izquierda', style: TextStyle(color: Utils.circulo3)),
-                          trailing: Icon(
-                            Icons.arrow_left_rounded,
-                            color: Utils.circulo3,
-                          ),
-                          onTap: () {
-                            widget.manager.moveBookcaseLeft(widget.bookcase);
-                            Navigator.pop(context);
-                            ScaffoldMessenger.of(context)
-                                .showSnackBar(Utils.snackBar('Estantería movida a la izquierda'));
-                          },
-                        ),
-                      ),
-                    if (canRight)
-                      Expanded(
-                        child: ListTile(
-                          title: Text('Derecha', style: TextStyle(color: Utils.circulo3)),
-                          trailing: Icon(
-                            Icons.arrow_right_rounded,
-                            color: Utils.circulo3,
-                          ),
-                          onTap: () {
-                            widget.manager.moveBookcaseRight(widget.bookcase);
-                            Navigator.pop(context);
-                            ScaffoldMessenger.of(context)
-                                .showSnackBar(Utils.snackBar('Estantería movida a la derecha'));
-                          },
-                        ),
-                      ),
-                  ],
-                ),
-                if (canLeft || canRight) Divider(color: Utils.circulo2),
-                ListTile(
-                  title: Text('Eliminar estantería', style: TextStyle(color: Utils.circulo3)),
-                  trailing: Icon(
-                    Icons.delete_forever_rounded,
-                    color: Colors.red[200],
-                  ),
-                  onTap: () async {
-                    final resp = await showMessage(
-                        context: context, message: '¿Eliminar todos los libros?', cancel: true);
-                    if (resp && context.mounted) {
-                      widget.manager.deleteBookcase(widget.bookcase);
-                      Navigator.pop(context);
-                      ScaffoldMessenger.of(context)
-                          .showSnackBar(Utils.snackBar('Estantería eliminada'));
-                    }
-                  },
-                ),
               ],
             ),
           ),
         );
       },
     );
-  }
-
-  void _showBooks() {
-    Widget content = Scaffold(
-      body: Container(
-        margin: const EdgeInsets.all(20),
-        padding: const EdgeInsets.all(20),
-        decoration:
-            BoxDecoration(color: Utils.colorContainer, borderRadius: BorderRadius.circular(20)),
-        child: Column(
-          spacing: 20,
-          children: [
-            Expanded(
-              child: ListView.separated(
-                physics: const BouncingScrollPhysics(),
-                shrinkWrap: true,
-                itemCount: widget.shelf.books.length,
-                itemBuilder: (context, index) {
-                  final Libro libro = widget.servicio.libros
-                      .firstWhere((l) => l.codigo == widget.shelf.books[index].id);
-                  return GestureDetector(
-                    onTap: () =>
-                        Navigator.pushNamed(context, LibroPage.routeName, arguments: libro),
-                    child: Row(
-                      spacing: 10,
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: CachedNetworkImage(
-                            imageUrl: Utils.getImgURL(libro.codigo),
-                            fit: BoxFit.contain,
-                            placeholder: (context, url) => SizedBox(
-                              width: 45,
-                              child: Center(
-                                child: CircularProgressIndicator(color: Utils.circulo4),
-                              ),
-                            ),
-                            errorWidget: (context, url, error) => Utils.noImage,
-                            imageBuilder: (context, imageProvider) {
-                              return Image(
-                                image: imageProvider,
-                                width: 45,
-                                fit: BoxFit.fitWidth,
-                              );
-                            },
-                          ),
-                        ),
-                        Expanded(
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      libro.titulo,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    Text(libro.autor, overflow: TextOverflow.ellipsis),
-                                  ],
-                                ),
-                              ),
-                              Icon(Icons.arrow_right_rounded),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-                separatorBuilder: (BuildContext context, int index) => Divider(),
-              ),
-            ),
-            Align(
-              alignment: Alignment.bottomRight,
-              child:
-                  ElevatedButton(onPressed: () => Navigator.pop(context), child: Text('Aceptar')),
-            )
-          ],
-        ),
-      ),
-    );
-    simpleDialog(context, content);
   }
 }

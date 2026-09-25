@@ -198,7 +198,7 @@ class BookVertical extends StatelessWidget {
                                 Helper.restPages(context: context, libro: libro, leyendo: leyendo),
                             child: CircularProgressWidget(
                               currentValue: leyendo?.paginas ?? 0,
-                              totalValue: libro.paginas,
+                              totalValue: leyendo?.leibles ?? libro.paginas,
                               progressColor: Utils.getCategoryColor(libro.categoria),
                             ),
                           ),

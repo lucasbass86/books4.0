@@ -22,6 +22,7 @@ class _EstanteriasPageState extends State<EstanteriasPage> {
   late Servicio servicio;
   late LibraryManager manager;
   int page = 0;
+  bool locked = true;
 
   @override
   void initState() {
@@ -103,7 +104,12 @@ class _EstanteriasPageState extends State<EstanteriasPage> {
         itemCount: manager.bookcases.length,
         itemBuilder: (context, index) {
           final bookcase = manager.bookcases[index];
-          return BookcaseTabWidget(servicio: servicio, manager: manager, bookcase: bookcase);
+          return BookcaseTabWidget(
+            servicio: servicio,
+            manager: manager,
+            bookcase: bookcase,
+            locked: locked,
+          );
         },
       ),
     );
@@ -120,57 +126,74 @@ class _EstanteriasPageState extends State<EstanteriasPage> {
   }
 
   Widget _fab(BuildContext context) {
-    return Column(
-      spacing: 5,
-      crossAxisAlignment: CrossAxisAlignment.end,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        FloatingActionButton(
-          mini: true,
-          heroTag: 'addBookcase',
-          backgroundColor: Utils.circulo1,
-          shape: StadiumBorder(),
-          onPressed: () async {
-            final resp = await inputBox(context, 'Indica las baldas',
-                textInputType: TextInputType.number, textAlign: TextAlign.center);
-            if (resp[0]) {
-              manager.addBookcase(int.parse(resp[1]));
-            }
-          },
-          child: Icon(Icons.add),
-        ),
-        if (manager.bookcases.isNotEmpty)
+    if (!locked) {
+      return Column(
+        spacing: 5,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        mainAxisSize: MainAxisSize.min,
+        children: [
           FloatingActionButton(
-            heroTag: 'addBook',
-            backgroundColor: Utils.circulo3,
+            mini: true,
+            heroTag: 'addBookcase',
+            backgroundColor: Utils.circulo1,
             shape: StadiumBorder(),
             onPressed: () async {
-              final List<Libro>? libros = await _searchBook(context);
-              if (libros != null) {
-                for (Libro l in libros) {
-                  if (!manager.checkBookOnShelves(l)) {
-                    final bookcase = manager.bookcases[page];
-                    final book = BookShelf(
-                        id: l.codigo,
-                        path: Utils.getImgURL(l.codigo),
-                        position: manager.selectedShelf!.books.isEmpty
-                            ? 1
-                            : manager.selectedShelf!.books.length + 1);
-                    manager.addBookToShelf(
-                        bookcase, manager.selectedShelf ?? bookcase.shelves.first, book);
-                  } else {
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context)
-                          .showSnackBar(Utils.snackBar('Libro ya colocado . . . ', isGood: false));
+              final resp = await inputBox(context, 'Indica las baldas',
+                  textInputType: TextInputType.number, textAlign: TextAlign.center);
+              if (resp[0]) {
+                manager.addBookcase(int.parse(resp[1]));
+              }
+            },
+            child: Icon(Icons.add),
+          ),
+          if (manager.bookcases.isNotEmpty)
+            FloatingActionButton(
+              heroTag: 'addBook',
+              backgroundColor: Utils.circulo3,
+              shape: StadiumBorder(),
+              onPressed: () async {
+                final List<Libro>? libros = await _searchBook(context);
+                if (libros != null) {
+                  for (Libro l in libros) {
+                    if (!manager.checkBookOnShelves(l)) {
+                      final bookcase = manager.bookcases[page];
+                      final book = BookShelf(
+                          id: l.codigo,
+                          path: Utils.getImgURL(l.codigo),
+                          position: manager.selectedShelf!.books.isEmpty
+                              ? 1
+                              : manager.selectedShelf!.books.length + 1);
+                      manager.addBookToShelf(
+                          bookcase, manager.selectedShelf ?? bookcase.shelves.first, book);
+                    } else {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                            Utils.snackBar('Libro ya colocado . . . ', isGood: false));
+                      }
                     }
                   }
                 }
-              }
-            },
-            child: Icon(Icons.book),
-          ),
-      ],
-    );
+              },
+              child: Icon(Icons.book),
+            ),
+        ],
+      );
+    } else {
+      return FloatingActionButton(
+        heroTag: 'lock',
+        backgroundColor: Utils.circulo1,
+        shape: StadiumBorder(),
+        onPressed: () async {
+          final resp = await password(context);
+          if (resp[1] == Utils.password && context.mounted) {
+            setState(() {
+              locked = false;
+            });
+          }
+        },
+        child: Icon(Icons.lock_open_rounded),
+      );
+    }
   }
 
   Widget _points() {

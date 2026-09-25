@@ -12,10 +12,12 @@ String leyendoToJson(List<Leyendo> data) =>
 class Leyendo {
   int codigoLibro;
   int paginas;
+  int leibles;
 
   Leyendo({
     required this.codigoLibro,
     required this.paginas,
+    required this.leibles,
   });
 
   @override
@@ -24,11 +26,13 @@ class Leyendo {
   factory Leyendo.fromJson(Map<String, dynamic> json) => Leyendo(
         codigoLibro: json["codigoLibro"],
         paginas: json["paginas"],
+        leibles: json["leibles"] ?? 0,
       );
 
   Map<String, dynamic> toJson() => {
         "codigoLibro": codigoLibro,
         "paginas": paginas,
+        "leibles": leibles,
       };
 }
 

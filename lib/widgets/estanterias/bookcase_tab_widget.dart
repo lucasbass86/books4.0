@@ -9,12 +9,14 @@ class BookcaseTabWidget extends StatelessWidget {
   final Servicio servicio;
   final LibraryManager manager;
   final Bookcase bookcase;
+  final bool locked;
 
   const BookcaseTabWidget({
     super.key,
     required this.servicio,
     required this.manager,
     required this.bookcase,
+    required this.locked,
   });
 
   @override
@@ -52,6 +54,7 @@ class BookcaseTabWidget extends StatelessWidget {
                     manager: manager,
                     bookcase: bookcase,
                     shelf: shelf,
+                    locked: locked,
                   ),
                 ),
                 Container(
