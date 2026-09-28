@@ -102,6 +102,7 @@ class _EstanteriasPageState extends State<EstanteriasPage> {
         physics: const BouncingScrollPhysics(),
         controller: pageController,
         itemCount: manager.bookcases.length,
+        onPageChanged: (_) => FocusManager.instance.primaryFocus?.unfocus(),
         itemBuilder: (context, index) {
           final bookcase = manager.bookcases[index];
           return BookcaseTabWidget(

@@ -87,8 +87,10 @@ class LibraryManager extends ChangeNotifier {
     notifyListeners();
   }
 
-  void deleteBook(Shelf shelf, BookShelf book) {
+  void deleteBook(Shelf shelf, BookShelf book) async {
     shelf.books.remove(book);
+    Bookcase bookcase = bookcases.firstWhere((b) => b.shelves.any((s) => s.id == shelf.id));
+    await saveBookcase(bookcase);
     notifyListeners();
   }
 
